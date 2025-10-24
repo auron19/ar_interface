@@ -346,7 +346,7 @@
         const requiredAPIs = [
           'mediaDevices' in navigator,
           'getUserMedia' in (navigator.mediaDevices || {}),
-          'BarcodeDetector' in window || true // Fallback since this might not be available
+          'BarcodeDetector' in window || true
         ];
         
         return requiredAPIs.every(api => api === true);
@@ -501,18 +501,28 @@
         this.updateLoading('Loading AR Content...', 60);
         
         try {
-          // Sample content kung walang API
-          this.arContent = this.getSampleContent();
+          // ⭐⭐ BAGONG CODE - FETCH FROM API ⭐⭐
+          const apiUrl = 'http://localhost/MUSEUM_SYSTEM/api/get_content.php';
+          console.log('Fetching content from:', apiUrl);
           
-          this.updateLoading('Creating AR Markers...', 80);
-          this.createARMarkers();
+          const response = await fetch(apiUrl);
           
+          if (response.ok) {
+            this.arContent = await response.json();
+            console.log('Loaded content from API:', this.arContent);
+            this.updateLoading('Creating AR Markers...', 80);
+            this.createARMarkers();
+            this.updateLoading('Ready! Point camera at markers', 100);
+          } else {
+            throw new Error('Failed to fetch content from API');
+          }
         } catch (error) {
           console.error('Error loading AR content:', error);
-          this.updateLoading('Using sample content', 80);
-          // Gamitin ang sample content kahit may error
+          // Fallback to sample content
+          this.updateLoading('Using sample content', 70);
           this.arContent = this.getSampleContent();
           this.createARMarkers();
+          this.updateLoading('Ready! Point camera at markers', 100);
         }
       }
 
@@ -548,6 +558,10 @@
       createARMarkers() {
         const scene = document.querySelector('a-scene');
         
+        // Clear existing markers first
+        const existingMarkers = scene.querySelectorAll('a-marker');
+        existingMarkers.forEach(marker => marker.remove());
+        
         this.arContent.forEach(content => {
           const marker = document.createElement('a-marker');
           marker.setAttribute('type', 'pattern');
@@ -576,7 +590,7 @@
             // Mobile-optimized scaling
             const scale = this.getMobileScale(content.category);
             model.setAttribute('scale', scale);
-            model.setAttribute('position', '0 0.3 0'); // Lower for mobile viewing
+            model.setAttribute('position', '0 0.3 0');
             model.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 25000');
             
             // Performance optimizations
@@ -591,8 +605,8 @@
           
           // Title - MOBILE OPTIMIZED
           const text = document.createElement('a-text');
-          text.setAttribute('value', content[`title_${this.currentLanguage}`] || content.title_en);
-          text.setAttribute('position', '0 1.2 0'); // Lower for mobile
+          text.setAttribute('value', content.title_en || content.title);
+          text.setAttribute('position', '0 1.2 0');
           text.setAttribute('align', 'center');
           text.setAttribute('color', '#00ff66');
           text.setAttribute('scale', this.isMobile ? '2 2 2' : '3 3 3');
@@ -617,11 +631,11 @@
           
           // Marker found event
           marker.addEventListener('markerFound', () => {
-            console.log('Marker found:', content.title_en);
+            console.log('Marker found:', content.title_en || content.title);
           });
 
           marker.addEventListener('markerLost', () => {
-            console.log('Marker lost:', content.title_en);
+            console.log('Marker lost:', content.title_en || content.title);
           });
           
           scene.appendChild(marker);
@@ -629,7 +643,6 @@
       }
       
       getMobileScale(category) {
-        // Smaller scales for mobile performance
         const scaleMap = {
           'historical': '1 1 1',
           'scientific': '0.8 0.8 0.8', 
@@ -660,8 +673,8 @@
       }
       
       showInfoPanel(content) {
-        const title = content[`title_${this.currentLanguage}`] || content.title_en;
-        const description = content[`description_${this.currentLanguage}`] || content.description_en || 'No description available.';
+        const title = content.title_en || content.title || 'No Title';
+        const description = content.description_en || content.description || 'No description available.';
         
         document.getElementById('infoTitle').textContent = title;
         document.getElementById('infoDescription').textContent = description;
@@ -751,7 +764,7 @@
           const content = this.arContent.find(c => c.id == contentId);
           
           if (content && text) {
-            text.setAttribute('value', content[`title_${this.currentLanguage}`] || content.title_en);
+            text.setAttribute('value', content[`title_${this.currentLanguage}`] || content.title_en || content.title);
           }
         });
       }
@@ -766,12 +779,10 @@
             
             // Mobile-friendly download
             if (this.isMobile) {
-              // For mobile, try to save to photos
               const link = document.createElement('a');
               link.href = url;
               link.download = 'armuseum_capture.jpg';
               
-              // Try to use the Share API on supported devices
               if (navigator.share) {
                 const file = new File([blob], 'armuseum_capture.jpg', { type: 'image/jpeg' });
                 navigator.share({
@@ -779,14 +790,12 @@
                   title: 'AR Museum Capture',
                   text: 'Check out my AR Museum experience!'
                 }).catch(() => {
-                  // Fallback to download
                   link.click();
                 });
               } else {
                 link.click();
               }
             } else {
-              // Desktop download
               const link = document.createElement('a');
               link.href = url;
               link.download = 'armuseum_capture.jpg';
@@ -825,11 +834,6 @@
 
     // Mobile initialization
     window.addEventListener('DOMContentLoaded', async () => {
-      // Check if we're on HTTPS
-      if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-        console.warn('Camera access works best with HTTPS');
-      }
-
       museum = new MobileARMuseum();
       await museum.init();
     });
