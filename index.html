@@ -184,173 +184,82 @@
       width: 100%;
     }
 
-    /* FEEDBACK BUTTON STYLES */
-    .feedback-btn {
-      position: fixed;
-      bottom: 100px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, #0a3d2f, #1b725a);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 1.5rem;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-      transition: all 0.3s ease;
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+   // FEEDBACK FUNCTIONS
+function openFeedback() {
+    document.getElementById("feedbackPopup").classList.add("active");
+    // Clear form when opening
+    document.getElementById('feedbackForm').reset();
+    document.getElementById('successMessage').style.display = 'none';
+    document.getElementById('feedbackForm').style.display = 'block';
+}
+
+function closeFeedback() {
+    document.getElementById("feedbackPopup").classList.remove("active");
+}
+
+async function submitFeedback(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const feedbackData = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        rating: parseInt(formData.get('rating')),
+        comment: formData.get('comment')
+    };
+
+    // Validation
+    if (!feedbackData.name || !feedbackData.email || !feedbackData.rating || !feedbackData.comment) {
+        alert('Please fill in all fields');
+        return;
     }
 
-    .feedback-btn:hover {
-      transform: scale(1.1);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    try {
+        const response = await fetch('save_feedback.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(feedbackData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Show success message
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('feedbackForm').style.display = 'none';
+            
+            // Auto close after 3 seconds
+            setTimeout(() => {
+                closeFeedback();
+                document.getElementById('feedbackForm').style.display = 'block';
+            }, 3000);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Network error. Please check your connection and try again.');
     }
+}
 
-    /* FEEDBACK POPUP STYLES */
-    .feedback-popup {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      z-index: 9999;
-      padding: 20px;
-    }
+// Update the event listener for the form
+document.getElementById('feedbackForm').addEventListener('submit', submitFeedback);
 
-    .feedback-popup.active {
-      display: flex;
-      justify-content: center;
-      align-items: center;
+// Close feedback popup when clicking outside
+document.getElementById('feedbackPopup').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeFeedback();
     }
+});
 
-    .feedback-form {
-      background: #fff;
-      padding: 30px;
-      border-radius: 15px;
-      width: 100%;
-      max-width: 450px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      position: relative;
+// Close with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeFeedback();
     }
-
-    .feedback-header {
-      text-align: center;
-      margin-bottom: 25px;
-    }
-
-    .feedback-header h2 {
-      color: #0a3d2f;
-      font-size: 1.8rem;
-      margin-bottom: 10px;
-    }
-
-    .feedback-header p {
-      color: #666;
-      font-size: 0.95rem;
-    }
-
-    .form-group {
-      position: relative;
-      margin-bottom: 20px;
-    }
-
-    .form-group i {
-      position: absolute;
-      left: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #0a3d2f;
-      font-size: 1.1rem;
-    }
-
-    .form-group.textarea i {
-      top: 25px;
-      transform: none;
-    }
-
-    .form-group input,
-    .form-group textarea {
-      width: 100%;
-      padding: 12px 15px 12px 45px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: all 0.3s ease;
-      background: #f9f9f9;
-    }
-
-    .form-group textarea {
-      padding-top: 15px;
-      min-height: 120px;
-      resize: vertical;
-    }
-
-    .form-group input:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: #0a3d2f;
-      background: #fff;
-      box-shadow: 0 0 0 3px rgba(10, 61, 47, 0.1);
-    }
-
-    .submit-btn {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #0a3d2f, #1b725a);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin-top: 10px;
-    }
-
-    .submit-btn:hover {
-      background: linear-gradient(135deg, #1b725a, #0a3d2f);
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-
-    .close-feedback {
-      position: absolute;
-      top: 15px;
-      right: 20px;
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      color: #666;
-      cursor: pointer;
-      transition: color 0.3s ease;
-    }
-
-    .close-feedback:hover {
-      color: #ff4444;
-    }
-
-    .success-message {
-      display: none;
-      text-align: center;
-      padding: 20px;
-      background: #d4edda;
-      color: #155724;
-      border-radius: 8px;
-      margin-top: 15px;
-      border: 1px solid #c3e6cb;
-    }
-
-    .success-message i {
-      font-size: 2rem;
-      margin-bottom: 10px;
-      color: #28a745;
-    }
+});
     
     /* Mobile-specific optimizations */
     @media (max-width: 768px) {
@@ -1210,4 +1119,5 @@
   </script>
 </body>
 </html>
+
 
