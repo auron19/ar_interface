@@ -1089,4 +1089,104 @@
 
     // FEEDBACK FUNCTIONS
     function openFeedback() {
-      document.getElementById("feedbackPopup").classList.add("
+      document.getElementById("feedbackPopup").classList.add("active");
+      // Clear form when opening
+      document.getElementById('feedbackForm').reset();
+      document.getElementById('successMessage').style.display = 'none';
+    }
+
+    function closeFeedback() {
+      document.getElementById("feedbackPopup").classList.remove("active");
+    }
+
+    function submitFeedback(event) {
+      event.preventDefault();
+      
+      const formData = new FormData(event.target);
+      const feedbackData = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        comment: formData.get('comment'),
+        timestamp: new Date().toISOString()
+      };
+
+      // Send to PHP backend
+      fetch('save_feedback.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(feedbackData)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Show success message
+          document.getElementById('successMessage').style.display = 'block';
+          document.getElementById('feedbackForm').style.display = 'none';
+          
+          // Auto close after 2 seconds
+          setTimeout(() => {
+            closeFeedback();
+            document.getElementById('feedbackForm').style.display = 'block';
+          }, 2000);
+        } else {
+          alert('Error submitting feedback. Please try again.');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error submitting feedback. Please try again.');
+      });
+    }
+
+    // Global museum instance
+    let museum;
+
+    // Mobile initialization
+    window.addEventListener('DOMContentLoaded', async () => {
+      museum = new MobileARMuseum();
+      await museum.init();
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      if (museum) {
+        museum.destroy();
+      }
+    });
+    
+    // Prevent accidental zoom
+    document.addEventListener('gesturestart', function (e) {
+      e.preventDefault();
+    });
+    
+    document.addEventListener('gesturechange', function (e) {
+      e.preventDefault();
+    });
+
+    // Handle visibility change (tab switching)
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        console.log('Page hidden - pausing AR');
+      } else {
+        console.log('Page visible - resuming AR');
+      }
+    });
+
+    // Close feedback popup when clicking outside
+    document.getElementById('feedbackPopup').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeFeedback();
+      }
+    });
+
+    // Close with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeFeedback();
+      }
+    });
+  </script>
+</body>
+</html>
