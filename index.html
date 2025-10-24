@@ -505,38 +505,58 @@
     <button class="close-btn" onclick="closeInfoPanel()">Close</button>
   </div>
 
-  <!-- Feedback Popup -->
-  <div class="feedback-popup" id="feedbackPopup">
+ <!-- Feedback Popup -->
+<div class="feedback-popup" id="feedbackPopup">
     <div class="feedback-form">
-      <button class="close-feedback" onclick="closeFeedback()">
-        <i class="fas fa-times"></i>
-      </button>
-      
-      <div class="feedback-header">
-        <h2><i class="fas fa-feedback"></i> Send Feedback</h2>
-        <p>We'd love to hear about your AR Museum experience!</p>
-      </div>
-
-      <form id="feedbackForm" onsubmit="submitFeedback(event)">
-        <div class="form-group">
-          <i class="fas fa-user"></i>
-          <input type="text" id="name" name="name" placeholder="Your Name" required>
-        </div>
-
-        <div class="form-group">
-          <i class="fas fa-envelope"></i>
-          <input type="email" id="email" name="email" placeholder="Your Email" required>
-        </div>
-
-        <div class="form-group textarea">
-          <i class="fas fa-comment"></i>
-          <textarea id="comment" name="comment" placeholder="Your feedback or suggestions..." required></textarea>
-        </div>
-
-        <button type="submit" class="submit-btn">
-          <i class="fas fa-paper-plane"></i> Send Feedback
+        <button class="close-feedback" onclick="closeFeedback()">
+            <i class="fas fa-times"></i>
         </button>
-      </form>
+        
+        <div class="feedback-header">
+            <h2><i class="fas fa-comment-dots"></i> Send Feedback</h2>
+            <p>We'd love to hear about your AR Museum experience!</p>
+        </div>
+
+        <form id="feedbackForm">
+            <div class="form-group">
+                <i class="fas fa-user"></i>
+                <input type="text" id="name" name="name" placeholder="Your Name" required>
+            </div>
+
+            <div class="form-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="email" name="email" placeholder="Your Email" required>
+            </div>
+
+            <div class="form-group">
+                <i class="fas fa-star"></i>
+                <select id="rating" name="rating" class="form-control" style="padding-left: 45px;" required>
+                    <option value="">Select Rating</option>
+                    <option value="5">★★★★★ Excellent</option>
+                    <option value="4">★★★★☆ Very Good</option>
+                    <option value="3">★★★☆☆ Good</option>
+                    <option value="2">★★☆☆☆ Fair</option>
+                    <option value="1">★☆☆☆☆ Poor</option>
+                </select>
+            </div>
+
+            <div class="form-group textarea">
+                <i class="fas fa-comment"></i>
+                <textarea id="comment" name="comment" placeholder="Your feedback or suggestions..." required></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-paper-plane"></i> Submit Feedback
+            </button>
+        </form>
+
+        <div class="success-message" id="successMessage">
+            <i class="fas fa-check-circle"></i>
+            <h3>Thank You!</h3>
+            <p>Your feedback has been submitted successfully.</p>
+        </div>
+    </div>
+</div>
 
       <div class="success-message" id="successMessage">
         <i class="fas fa-check-circle"></i>
@@ -1190,3 +1210,4 @@
   </script>
 </body>
 </html>
+
