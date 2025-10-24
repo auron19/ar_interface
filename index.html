@@ -325,6 +325,7 @@
         this.isMobile = this.detectMobile();
         this.deviceTier = this.detectDeviceTier();
         this.cameraStream = null;
+        this.cameraInitialized = false;
       }
       
       detectMobile() {
@@ -392,13 +393,20 @@
           }
 
           // Initialize camera first
+          this.updateLoading('Accessing camera...', 30);
           const cameraSuccess = await this.initializeARCamera();
+          
           if (!cameraSuccess) {
             throw new Error('Hindi ma-access ang camera');
           }
           
+          this.cameraInitialized = true;
+          this.updateLoading('Camera ready! Loading content...', 50);
+          
           await this.loadARContent();
           this.setupEventListeners();
+          
+          this.updateLoading('Ready! Point camera at markers', 100);
           this.hideLoading();
         } catch (error) {
           console.error('AR initialization failed:', error);
@@ -407,59 +415,86 @@
       }
 
       async initializeARCamera() {
-        this.updateLoading('Accessing camera...', 30);
-        
-        try {
-          // Gumamit ng A-Frame's built-in camera handling
+        return new Promise((resolve) => {
           const scene = document.querySelector('a-scene');
           
-          if (scene.hasLoaded) {
-            await scene.components['arjs'].start();
-          } else {
-            await new Promise((resolve) => {
-              scene.addEventListener('loaded', () => {
-                scene.components['arjs'].start();
-                resolve();
-              });
-            });
-          }
-          
-          this.updateLoading('Camera ready!', 50);
-          return true;
-        } catch (error) {
-          console.error('AR.js camera start failed:', error);
-          
-          // Fallback: Manual camera access
-          try {
-            this.updateLoading('Trying alternative camera...', 40);
-            
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-              video: { 
-                facingMode: 'environment',
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-              } 
-            });
-            
-            this.cameraStream = stream;
-            
-            // I-attach ang stream sa video element kung kailangan
-            const video = document.createElement('video');
-            video.srcObject = stream;
-            video.setAttribute('playsinline', '');
-            video.setAttribute('webkit-playsinline', '');
-            video.style.display = 'none';
-            document.body.appendChild(video);
-            await video.play();
-            
-            this.updateLoading('Alternative camera ready!', 50);
-            return true;
-          } catch (fallbackError) {
-            console.error('Fallback camera also failed:', fallbackError);
-            this.updateLoading('Camera access failed', 50);
+          const tryARJSCamera = () => {
+            try {
+              if (scene.components && scene.components.arjs) {
+                scene.components.arjs.start();
+                console.log('AR.js camera started successfully');
+                resolve(true);
+                return true;
+              }
+            } catch (error) {
+              console.log('AR.js camera failed, trying fallback:', error);
+              return false;
+            }
             return false;
+          };
+
+          const tryFallbackCamera = async () => {
+            try {
+              this.updateLoading('Trying alternative camera...', 40);
+              
+              const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                  facingMode: 'environment',
+                  width: { ideal: 1280 },
+                  height: { ideal: 720 }
+                } 
+              });
+              
+              this.cameraStream = stream;
+              
+              // I-attach ang stream sa video element
+              const video = document.createElement('video');
+              video.srcObject = stream;
+              video.setAttribute('playsinline', '');
+              video.setAttribute('webkit-playsinline', '');
+              video.style.display = 'none';
+              document.body.appendChild(video);
+              
+              video.onloadedmetadata = () => {
+                video.play().then(() => {
+                  console.log('Fallback camera ready!');
+                  resolve(true);
+                }).catch(e => {
+                  console.error('Fallback camera play failed:', e);
+                  resolve(false);
+                });
+              };
+              
+            } catch (fallbackError) {
+              console.error('Fallback camera also failed:', fallbackError);
+              this.updateLoading('Camera access failed', 50);
+              resolve(false);
+            }
+          };
+
+          // Subukan muna ang AR.js camera
+          if (scene.hasLoaded) {
+            if (!tryARJSCamera()) {
+              tryFallbackCamera();
+            }
+          } else {
+            scene.addEventListener('loaded', () => {
+              setTimeout(() => {
+                if (!tryARJSCamera()) {
+                  tryFallbackCamera();
+                }
+              }, 1000);
+            });
+            
+            // Timeout fallback - kung hindi mag-load ang scene
+            setTimeout(() => {
+              if (!this.cameraInitialized) {
+                console.log('Scene loading timeout, trying fallback camera');
+                tryFallbackCamera();
+              }
+            }, 5000);
           }
-        }
+        });
       }
       
       async loadARContent() {
@@ -472,10 +507,9 @@
           this.updateLoading('Creating AR Markers...', 80);
           this.createARMarkers();
           
-          this.updateLoading('Ready! Point camera at markers', 100);
         } catch (error) {
           console.error('Error loading AR content:', error);
-          this.updateLoading('Using sample content', 100);
+          this.updateLoading('Using sample content', 80);
           // Gamitin ang sample content kahit may error
           this.arContent = this.getSampleContent();
           this.createARMarkers();
@@ -642,7 +676,7 @@
       hideLoading() {
         setTimeout(() => {
           document.getElementById('loading').style.display = 'none';
-        }, 1500);
+        }, 1000);
       }
       
       setupEventListeners() {
@@ -679,10 +713,12 @@
         try {
           const cameraSuccess = await this.initializeARCamera();
           if (cameraSuccess) {
-            this.updateLoading('Camera access successful!', 100);
-            setTimeout(() => {
-              this.hideLoading();
-            }, 1000);
+            this.cameraInitialized = true;
+            this.updateLoading('Camera access successful! Loading content...', 50);
+            await this.loadARContent();
+            this.setupEventListeners();
+            this.updateLoading('Ready!', 100);
+            this.hideLoading();
           } else {
             throw new Error('Camera access still failed');
           }
@@ -791,8 +827,7 @@
     window.addEventListener('DOMContentLoaded', async () => {
       // Check if we're on HTTPS
       if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-        document.getElementById('loadMessage').textContent = 'Please use HTTPS for camera access';
-        return;
+        console.warn('Camera access works best with HTTPS');
       }
 
       museum = new MobileARMuseum();
