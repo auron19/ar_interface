@@ -182,263 +182,208 @@
       margin-top: 15px;
       cursor: pointer;
       width: 100%;
-
-      /* FEEDBACK POPUP STYLES */
-.feedback-popup {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9);
-    z-index: 9999;
-    padding: 20px;
-    backdrop-filter: blur(5px);
-}
-
-.feedback-popup.active {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.feedback-form {
-    background: #fff;
-    padding: 30px;
-    border-radius: 15px;
-    width: 100%;
-    max-width: 450px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    position: relative;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.feedback-header {
-    text-align: center;
-    margin-bottom: 25px;
-}
-
-.feedback-header h2 {
-    color: #0a3d2f;
-    font-size: 1.8rem;
-    margin-bottom: 10px;
-}
-
-.feedback-header p {
-    color: #666;
-    font-size: 0.95rem;
-}
-
-.form-group {
-    position: relative;
-    margin-bottom: 20px;
-}
-
-.form-group i {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #0a3d2f;
-    font-size: 1.1rem;
-    z-index: 2;
-}
-
-.form-group.textarea i {
-    top: 25px;
-    transform: none;
-}
-
-.form-group select {
-    width: 100%;
-    padding: 12px 15px 12px 45px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    background: #f9f9f9;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-}
-
-.form-group select:focus {
-    outline: none;
-    border-color: #0a3d2f;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(10, 61, 47, 0.1);
-}
-
-.form-group input,
-.form-group textarea {
-    width: 100%;
-    padding: 12px 15px 12px 45px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    background: #f9f9f9;
-}
-
-.form-group textarea {
-    padding-top: 15px;
-    min-height: 120px;
-    resize: vertical;
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: #0a3d2f;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(10, 61, 47, 0.1);
-}
-
-.submit-btn {
-    width: 100%;
-    padding: 14px;
-    background: linear-gradient(135deg, #0a3d2f, #1b725a);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 10px;
-}
-
-.submit-btn:hover {
-    background: linear-gradient(135deg, #1b725a, #0a3d2f);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-.close-feedback {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #666;
-    cursor: pointer;
-    transition: color 0.3s ease;
-    z-index: 3;
-}
-
-.close-feedback:hover {
-    color: #ff4444;
-}
-
-.success-message {
-    display: none;
-    text-align: center;
-    padding: 30px 20px;
-    background: #d4edda;
-    color: #155724;
-    border-radius: 8px;
-    margin-top: 15px;
-    border: 1px solid #c3e6cb;
-}
-
-.success-message i {
-    font-size: 3rem;
-    margin-bottom: 15px;
-    color: #28a745;
-}
-
-.success-message h3 {
-    margin-bottom: 10px;
-    color: #155724;
-}
-
-/* Star rating colors */
-.form-group select option[value="5"] { color: #28a745; font-weight: bold; }
-.form-group select option[value="4"] { color: #20c997; font-weight: bold; }
-.form-group select option[value="3"] { color: #ffc107; font-weight: bold; }
-.form-group select option[value="2"] { color: #fd7e14; font-weight: bold; }
-.form-group select option[value="1"] { color: #dc3545; font-weight: bold; }
     }
 
-   // FEEDBACK FUNCTIONS
-function openFeedback() {
-    document.getElementById("feedbackPopup").classList.add("active");
-    // Clear form when opening
-    document.getElementById('feedbackForm').reset();
-    document.getElementById('successMessage').style.display = 'none';
-    document.getElementById('feedbackForm').style.display = 'block';
-}
-
-function closeFeedback() {
-    document.getElementById("feedbackPopup").classList.remove("active");
-}
-
-async function submitFeedback(event) {
-    event.preventDefault();
-    
-    const formData = new FormData(event.target);
-    const feedbackData = {
-        name: formData.get('name'),
-        email: formData.get('email'),
-        rating: parseInt(formData.get('rating')),
-        comment: formData.get('comment')
-    };
-
-    // Validation
-    if (!feedbackData.name || !feedbackData.email || !feedbackData.rating || !feedbackData.comment) {
-        alert('Please fill in all fields');
-        return;
+    .feedback-btn {
+      position: fixed;
+      bottom: 120px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: rgba(214,229,220,0.25);
+      border: 2px solid rgba(0,255,102,0.7);
+      border-radius: 50%;
+      color: #ffffff;
+      font-size: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 100;
+      cursor: pointer;
     }
 
-    try {
-        const response = await fetch('save_feedback.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(feedbackData)
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            // Show success message
-            document.getElementById('successMessage').style.display = 'block';
-            document.getElementById('feedbackForm').style.display = 'none';
-            
-            // Auto close after 3 seconds
-            setTimeout(() => {
-                closeFeedback();
-                document.getElementById('feedbackForm').style.display = 'block';
-            }, 3000);
-        } else {
-            alert('Error: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Network error. Please check your connection and try again.');
+    /* FEEDBACK POPUP STYLES */
+    .feedback-popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 9999;
+      padding: 20px;
+      backdrop-filter: blur(5px);
     }
-}
 
-// Update the event listener for the form
-document.getElementById('feedbackForm').addEventListener('submit', submitFeedback);
-
-// Close feedback popup when clicking outside
-document.getElementById('feedbackPopup').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeFeedback();
+    .feedback-popup.active {
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-});
 
-// Close with Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeFeedback();
+    .feedback-form {
+      background: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      width: 100%;
+      max-width: 450px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
     }
-});
+
+    .feedback-header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .feedback-header h2 {
+      color: #0a3d2f;
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
+
+    .feedback-header p {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    .form-group {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .form-group i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #0a3d2f;
+      font-size: 1.1rem;
+      z-index: 2;
+    }
+
+    .form-group.textarea i {
+      top: 25px;
+      transform: none;
+    }
+
+    .form-group select {
+      width: 100%;
+      padding: 12px 15px 12px 45px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: #f9f9f9;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+    }
+
+    .form-group select:focus {
+      outline: none;
+      border-color: #0a3d2f;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(10, 61, 47, 0.1);
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 15px 12px 45px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: #f9f9f9;
+    }
+
+    .form-group textarea {
+      padding-top: 15px;
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #0a3d2f;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(10, 61, 47, 0.1);
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #0a3d2f, #1b725a);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .submit-btn:hover {
+      background: linear-gradient(135deg, #1b725a, #0a3d2f);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .close-feedback {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #666;
+      cursor: pointer;
+      transition: color 0.3s ease;
+      z-index: 3;
+    }
+
+    .close-feedback:hover {
+      color: #ff4444;
+    }
+
+    .success-message {
+      display: none;
+      text-align: center;
+      padding: 30px 20px;
+      background: #d4edda;
+      color: #155724;
+      border-radius: 8px;
+      margin-top: 15px;
+      border: 1px solid #c3e6cb;
+    }
+
+    .success-message i {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      color: #28a745;
+    }
+
+    .success-message h3 {
+      margin-bottom: 10px;
+      color: #155724;
+    }
+
+    /* Star rating colors */
+    .form-group select option[value="5"] { color: #28a745; font-weight: bold; }
+    .form-group select option[value="4"] { color: #20c997; font-weight: bold; }
+    .form-group select option[value="3"] { color: #ffc107; font-weight: bold; }
+    .form-group select option[value="2"] { color: #fd7e14; font-weight: bold; }
+    .form-group select option[value="1"] { color: #dc3545; font-weight: bold; }
     
     /* Mobile-specific optimizations */
     @media (max-width: 768px) {
@@ -593,58 +538,50 @@ document.addEventListener('keydown', function(e) {
     <button class="close-btn" onclick="closeInfoPanel()">Close</button>
   </div>
 
- <!-- Feedback Popup -->
-<div class="feedback-popup" id="feedbackPopup">
+  <!-- Feedback Popup -->
+  <div class="feedback-popup" id="feedbackPopup">
     <div class="feedback-form">
-        <button class="close-feedback" onclick="closeFeedback()">
-            <i class="fas fa-times"></i>
+      <button class="close-feedback" onclick="closeFeedback()">
+        <i class="fas fa-times"></i>
+      </button>
+      
+      <div class="feedback-header">
+        <h2><i class="fas fa-comment-dots"></i> Send Feedback</h2>
+        <p>We'd love to hear about your AR Museum experience!</p>
+      </div>
+
+      <form id="feedbackForm">
+        <div class="form-group">
+          <i class="fas fa-user"></i>
+          <input type="text" id="name" name="name" placeholder="Your Name" required>
+        </div>
+
+        <div class="form-group">
+          <i class="fas fa-envelope"></i>
+          <input type="email" id="email" name="email" placeholder="Your Email" required>
+        </div>
+
+        <div class="form-group">
+          <i class="fas fa-star"></i>
+          <select id="rating" name="rating" class="form-control" style="padding-left: 45px;" required>
+            <option value="">Select Rating</option>
+            <option value="5">★★★★★ Excellent</option>
+            <option value="4">★★★★☆ Very Good</option>
+            <option value="3">★★★☆☆ Good</option>
+            <option value="2">★★☆☆☆ Fair</option>
+            <option value="1">★☆☆☆☆ Poor</option>
+          </select>
+        </div>
+
+        <div class="form-group textarea">
+          <i class="fas fa-comment"></i>
+          <textarea id="comment" name="comment" placeholder="Your feedback or suggestions..." required></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">
+          <i class="fas fa-paper-plane"></i> Submit Feedback
         </button>
-        
-        <div class="feedback-header">
-            <h2><i class="fas fa-comment-dots"></i> Send Feedback</h2>
-            <p>We'd love to hear about your AR Museum experience!</p>
-        </div>
-
-        <form id="feedbackForm">
-            <div class="form-group">
-                <i class="fas fa-user"></i>
-                <input type="text" id="name" name="name" placeholder="Your Name" required>
-            </div>
-
-            <div class="form-group">
-                <i class="fas fa-envelope"></i>
-                <input type="email" id="email" name="email" placeholder="Your Email" required>
-            </div>
-
-            <div class="form-group">
-                <i class="fas fa-star"></i>
-                <select id="rating" name="rating" class="form-control" style="padding-left: 45px;" required>
-                    <option value="">Select Rating</option>
-                    <option value="5">★★★★★ Excellent</option>
-                    <option value="4">★★★★☆ Very Good</option>
-                    <option value="3">★★★☆☆ Good</option>
-                    <option value="2">★★☆☆☆ Fair</option>
-                    <option value="1">★☆☆☆☆ Poor</option>
-                </select>
-            </div>
-
-            <div class="form-group textarea">
-                <i class="fas fa-comment"></i>
-                <textarea id="comment" name="comment" placeholder="Your feedback or suggestions..." required></textarea>
-            </div>
-
-            <button type="submit" class="submit-btn">
-                <i class="fas fa-paper-plane"></i> Submit Feedback
-            </button>
-        </form>
-
-        <div class="success-message" id="successMessage">
-            <i class="fas fa-check-circle"></i>
-            <h3>Thank You!</h3>
-            <p>Your feedback has been submitted successfully.</p>
-        </div>
-    </div>
-</div>
+      </form>
 
       <div class="success-message" id="successMessage">
         <i class="fas fa-check-circle"></i>
@@ -682,6 +619,85 @@ document.addEventListener('keydown', function(e) {
   </a-scene>
 
   <script>
+    // FEEDBACK FUNCTIONS
+    function openFeedback() {
+      document.getElementById("feedbackPopup").classList.add("active");
+      // Clear form when opening
+      document.getElementById('feedbackForm').reset();
+      document.getElementById('successMessage').style.display = 'none';
+      document.getElementById('feedbackForm').style.display = 'block';
+    }
+
+    function closeFeedback() {
+      document.getElementById("feedbackPopup").classList.remove("active");
+    }
+
+    async function submitFeedback(event) {
+      event.preventDefault();
+      
+      const formData = new FormData(event.target);
+      const feedbackData = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        rating: parseInt(formData.get('rating')),
+        comment: formData.get('comment')
+      };
+
+      // Validation
+      if (!feedbackData.name || !feedbackData.email || !feedbackData.rating || !feedbackData.comment) {
+        alert('Please fill in all fields');
+        return;
+      }
+
+      try {
+        const response = await fetch('save_feedback.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(feedbackData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Show success message
+          document.getElementById('successMessage').style.display = 'block';
+          document.getElementById('feedbackForm').style.display = 'none';
+          
+          // Auto close after 3 seconds
+          setTimeout(() => {
+            closeFeedback();
+            document.getElementById('feedbackForm').style.display = 'block';
+          }, 3000);
+        } else {
+          alert('Error: ' + data.message);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Network error. Please check your connection and try again.');
+      }
+    }
+
+    // Update the event listener for the form
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('feedbackForm').addEventListener('submit', submitFeedback);
+    });
+
+    // Close feedback popup when clicking outside
+    document.getElementById('feedbackPopup').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeFeedback();
+      }
+    });
+
+    // Close with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeFeedback();
+      }
+    });
+
     // MOBILE-OPTIMIZED AR SYSTEM
     class MobileARMuseum {
       constructor() {
@@ -1195,59 +1211,6 @@ document.addEventListener('keydown', function(e) {
       document.getElementById('infoPanel').style.display = 'none';
     }
 
-    // FEEDBACK FUNCTIONS
-    function openFeedback() {
-      document.getElementById("feedbackPopup").classList.add("active");
-      // Clear form when opening
-      document.getElementById('feedbackForm').reset();
-      document.getElementById('successMessage').style.display = 'none';
-    }
-
-    function closeFeedback() {
-      document.getElementById("feedbackPopup").classList.remove("active");
-    }
-
-    function submitFeedback(event) {
-      event.preventDefault();
-      
-      const formData = new FormData(event.target);
-      const feedbackData = {
-        name: formData.get('name'),
-        email: formData.get('email'),
-        comment: formData.get('comment'),
-        timestamp: new Date().toISOString()
-      };
-
-      // Send to PHP backend
-      fetch('save_feedback.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(feedbackData)
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Show success message
-          document.getElementById('successMessage').style.display = 'block';
-          document.getElementById('feedbackForm').style.display = 'none';
-          
-          // Auto close after 2 seconds
-          setTimeout(() => {
-            closeFeedback();
-            document.getElementById('feedbackForm').style.display = 'block';
-          }, 2000);
-        } else {
-          alert('Error submitting feedback. Please try again.');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('Error submitting feedback. Please try again.');
-      });
-    }
-
     // Global museum instance
     let museum;
 
@@ -1281,23 +1244,6 @@ document.addEventListener('keydown', function(e) {
         console.log('Page visible - resuming AR');
       }
     });
-
-    // Close feedback popup when clicking outside
-    document.getElementById('feedbackPopup').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeFeedback();
-      }
-    });
-
-    // Close with Escape key
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        closeFeedback();
-      }
-    });
   </script>
 </body>
 </html>
-
-
-
