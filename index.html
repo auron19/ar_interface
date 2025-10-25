@@ -43,6 +43,24 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: all 0.2s ease;
+    }
+    
+    .icon-btn:active {
+      transform: scale(0.95);
+      background: rgba(0,255,102,0.4);
+    }
+    
+    .icon-btn.recording {
+      background: rgba(255,0,0,0.7);
+      border-color: rgba(255,0,0,0.9);
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
     }
     
     .top-left-group { 
@@ -204,6 +222,40 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       z-index: 100;
       cursor: pointer;
+    }
+
+    /* Recording indicator */
+    .recording-indicator {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,0,0,0.8);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      animation: pulse 1.5s infinite;
+    }
+
+    .recording-indicator .dot {
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
     }
 
     /* FEEDBACK POPUP STYLES */
@@ -440,6 +492,12 @@
       .feedback-header h2 {
         font-size: 1.5rem;
       }
+
+      .recording-indicator {
+        top: 15px;
+        font-size: 12px;
+        padding: 6px 12px;
+      }
     }
     
     @media (max-width: 480px) {
@@ -507,6 +565,12 @@
     <div id="loadProgress">0%</div>
     <div id="errorContainer"></div>
     <button id="retryCameraBtn" class="camera-permission-btn" style="display: none;">Retry Camera Access</button>
+  </div>
+
+  <!-- Recording Indicator -->
+  <div class="recording-indicator" id="recordingIndicator">
+    <div class="dot"></div>
+    <span>Recording...</span>
   </div>
 
   <!-- UI Controls -->
@@ -590,6 +654,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Hidden video element for recording -->
+  <video id="previewVideo" style="display: none;"></video>
 
   <!-- AR Scene - MOBILE OPTIMIZED -->
   <a-scene 
@@ -708,6 +775,18 @@
         this.deviceTier = this.detectDeviceTier();
         this.cameraStream = null;
         this.cameraInitialized = false;
+        
+        // Video recording variables
+        this.isRecording = false;
+        this.mediaRecorder = null;
+        this.recordedChunks = [];
+        this.videoElement = document.getElementById('previewVideo');
+        this.recordingTimer = null;
+        this.recordingStartTime = null;
+        
+        // Touch event variables for video button
+        this.videoButtonPressed = false;
+        this.videoButtonTimer = null;
       }
       
       detectMobile() {
@@ -1086,9 +1165,58 @@
           this.captureScreenshot();
         });
         
-        // Video recording
-        document.getElementById('videoBtn').addEventListener('click', () => {
-          this.toggleVideoRecording();
+        // Video recording - TOUCH EVENTS for hold to record
+        const videoBtn = document.getElementById('videoBtn');
+        
+        // Touch start - start recording after 0.5 seconds
+        videoBtn.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          this.videoButtonPressed = true;
+          
+          this.videoButtonTimer = setTimeout(() => {
+            if (this.videoButtonPressed) {
+              this.startVideoRecording();
+            }
+          }, 500);
+        });
+        
+        // Touch end - stop recording
+        videoBtn.addEventListener('touchend', (e) => {
+          e.preventDefault();
+          this.videoButtonPressed = false;
+          clearTimeout(this.videoButtonTimer);
+          
+          if (this.isRecording) {
+            this.stopVideoRecording();
+          }
+        });
+        
+        // Mouse events for desktop testing
+        videoBtn.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          this.videoButtonPressed = true;
+          
+          this.videoButtonTimer = setTimeout(() => {
+            if (this.videoButtonPressed) {
+              this.startVideoRecording();
+            }
+          }, 500);
+        });
+        
+        videoBtn.addEventListener('mouseup', (e) => {
+          e.preventDefault();
+          this.videoButtonPressed = false;
+          clearTimeout(this.videoButtonTimer);
+          
+          if (this.isRecording) {
+            this.stopVideoRecording();
+          }
+        });
+        
+        // Prevent context menu on long press
+        videoBtn.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          return false;
         });
 
         // Retry camera button
@@ -1185,18 +1313,137 @@
             }
             
             URL.revokeObjectURL(url);
+            
+            // Show confirmation
+            this.showTemporaryMessage('📸 Photo saved!');
           }, 'image/jpeg', 0.8);
         } catch (error) {
           alert('Screenshot saved to your device!');
         }
       }
       
-      toggleVideoRecording() {
-        if (this.isMobile) {
-          alert('📹 Video recording coming soon! For now, use your device screen recorder.');
-        } else {
-          alert('Video recording feature coming soon!');
+      async startVideoRecording() {
+        try {
+          if (this.isRecording) return;
+          
+          const scene = document.querySelector('a-scene');
+          const canvas = scene.canvas;
+          
+          // Get the stream from canvas
+          const stream = canvas.captureStream(30); // 30 FPS
+          
+          // Create media recorder
+          this.mediaRecorder = new MediaRecorder(stream, {
+            mimeType: 'video/webm;codecs=vp9',
+            videoBitsPerSecond: 2500000 // 2.5 Mbps
+          });
+          
+          this.recordedChunks = [];
+          
+          this.mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              this.recordedChunks.push(event.data);
+            }
+          };
+          
+          this.mediaRecorder.onstop = () => {
+            this.saveRecordedVideo();
+          };
+          
+          // Start recording
+          this.mediaRecorder.start(100); // Collect data every 100ms
+          this.isRecording = true;
+          
+          // Update UI
+          document.getElementById('videoBtn').classList.add('recording');
+          document.getElementById('recordingIndicator').style.display = 'flex';
+          
+          // Start timer
+          this.recordingStartTime = Date.now();
+          this.updateRecordingTimer();
+          
+          console.log('Video recording started');
+          
+        } catch (error) {
+          console.error('Error starting video recording:', error);
+          this.showTemporaryMessage('❌ Failed to start recording');
         }
+      }
+      
+      stopVideoRecording() {
+        if (!this.isRecording || !this.mediaRecorder) return;
+        
+        this.mediaRecorder.stop();
+        this.isRecording = false;
+        
+        // Clear timer
+        clearTimeout(this.recordingTimer);
+        
+        // Update UI
+        document.getElementById('videoBtn').classList.remove('recording');
+        document.getElementById('recordingIndicator').style.display = 'none';
+        
+        console.log('Video recording stopped');
+      }
+      
+      updateRecordingTimer() {
+        if (!this.isRecording) return;
+        
+        const elapsed = Date.now() - this.recordingStartTime;
+        const seconds = Math.floor(elapsed / 1000);
+        document.getElementById('recordingIndicator').innerHTML = `
+          <div class="dot"></div>
+          <span>Recording... ${seconds}s</span>
+        `;
+        
+        this.recordingTimer = setTimeout(() => this.updateRecordingTimer(), 1000);
+      }
+      
+      saveRecordedVideo() {
+        const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        
+        // Create download link
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `armuseum_recording_${new Date().getTime()}.webm`;
+        
+        // Auto-download
+        a.click();
+        
+        // Clean up
+        URL.revokeObjectURL(url);
+        this.recordedChunks = [];
+        
+        // Show confirmation
+        this.showTemporaryMessage('🎥 Video saved!');
+      }
+      
+      showTemporaryMessage(message) {
+        // Create temporary message element
+        const msgEl = document.createElement('div');
+        msgEl.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: rgba(0,0,0,0.8);
+          color: white;
+          padding: 15px 25px;
+          border-radius: 10px;
+          z-index: 10000;
+          font-size: 16px;
+          font-weight: bold;
+          backdrop-filter: blur(10px);
+          border: 2px solid #00ff66;
+        `;
+        msgEl.textContent = message;
+        document.body.appendChild(msgEl);
+        
+        // Remove after 2 seconds
+        setTimeout(() => {
+          document.body.removeChild(msgEl);
+        }, 2000);
       }
 
       // Cleanup method
@@ -1204,6 +1451,13 @@
         if (this.cameraStream) {
           this.cameraStream.getTracks().forEach(track => track.stop());
         }
+        
+        if (this.isRecording) {
+          this.stopVideoRecording();
+        }
+        
+        clearTimeout(this.videoButtonTimer);
+        clearTimeout(this.recordingTimer);
       }
     }
     
